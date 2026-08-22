@@ -16,7 +16,6 @@ export const App: React.FC = () => {
   const [askQuery, setAskQuery] = useState<string>('');
   const [selectedMistakeId, setSelectedMistakeId] = useState<string | null>(null);
 
-  // Load mistakes from DB on mount
   useEffect(() => {
     setMistakes(getMistakes());
   }, []);
@@ -44,7 +43,6 @@ export const App: React.FC = () => {
     handleRefreshDb();
   };
 
-  // Navigates to memory search tab with a query pre-filled
   const handleNavigateWithQuery = (tabId: string, query?: string) => {
     if (query) {
       setAskQuery(query);
@@ -52,13 +50,11 @@ export const App: React.FC = () => {
     setCurrentTab(tabId);
   };
 
-  // Views a mistake directly. Switches to My Memories tab and schedules it to open.
   const handleViewMistakeDirectly = (mistake: Mistake) => {
     setSelectedMistakeId(mistake.id);
     setCurrentTab('memories');
   };
 
-  // Safe navigation trigger to clear query when moving away from Ask Memory
   const handleTabChange = (tabId: string) => {
     if (tabId !== 'ask-memory') {
       setAskQuery('');
@@ -66,7 +62,6 @@ export const App: React.FC = () => {
     setCurrentTab(tabId);
   };
 
-  // Callback to handle pre-filled "Save as New Mistake" trigger from Similarity Results
   const handleSaveAsNewFromSimilarity = (queryText: string, matchedMistakeId: string) => {
     const matched = mistakes.find(m => m.id === matchedMistakeId);
     
@@ -84,13 +79,10 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col lg:flex-row relative">
-      {/* Side Navigation Bar */}
       <Sidebar currentTab={currentTab} setCurrentTab={handleTabChange} />
 
-      {/* Main Panel Content */}
       <main className="flex-1 lg:pl-64 min-w-0">
         <div className="max-w-7xl mx-auto p-4 md:p-8 pt-20 lg:pt-8 min-h-screen flex flex-col">
-          {/* Active Tab Router */}
           {currentTab === 'dashboard' && (
             <Dashboard 
               mistakes={mistakes} 
@@ -140,7 +132,6 @@ export const App: React.FC = () => {
         </div>
       </main>
 
-      {/* Floating AI Debug Coach */}
       <AICoachModal />
     </div>
   );

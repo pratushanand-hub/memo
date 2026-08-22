@@ -118,3 +118,74 @@ ${memoryContext ? JSON.stringify(memoryContext) : 'No past context provided.'}`;
     return res.status(500).json({ success: false, error: errorDetails });
   }
 };
+
+exports.scanCodeForMistakes = async (req, res) => {
+  const { code, language } = req.body;
+
+  if (!code || !code.trim()) {
+    return res.status(200).json({ success: true, markers: [] });
+  }
+
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  if (!openRouterKey) {
+    return res.status(500).json({ success: false, error: 'OPENROUTER_API_KEY is not set' });
+  }
+
+  try {
+    const prompt = `Analyze this ${language || 'javascript'} code for recurring developer mistakes, logic traps, or antipatterns (such as unmemoized objects in React hooks, missing async/await handling, wrong trigonometry units, or schema leaks).
+
+Code to inspect:
+\`\`\`${language || 'javascript'}
+${code}
+\`\`\`
+
+If any potential bug or recurring mistake exists, return a STRICT JSON array of markers (and nothing else):
+[
+  {
+    "startLineNumber": 1,
+    "startColumn": 1,
+    "endLineNumber": 1,
+    "endColumn": 50,
+    "message": "Brief description of the antipattern and the fix",
+    "severity": 8
+  }
+]
+Severity levels: 8 = Error, 4 = Warning, 2 = Info.
+If no issues are found, return: []`;
+
+    const response = await axios.post(
+      'https://openrouter.ai/api/v1/chat/completions',
+      {
+        model: 'openrouter/auto',
+        messages: [
+          { role: 'system', content: 'You are a static code analysis engine that outputs only valid raw JSON without markdown explanations.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.1
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${openRouterKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'http://localhost:5173',
+          'X-Title': 'MistakeMemo Linter'
+        },
+        timeout: 25000
+      }
+    );
+
+    const rawContent = response.data?.choices?.[0]?.message?.content || '[]';
+    const cleaned = rawContent.replace(/```json/g, '').replace(/```/g, '').trim();
+    let markers = [];
+    try {
+      markers = JSON.parse(cleaned);
+    } catch {
+      markers = [];
+    }
+
+    return res.status(200).json({ success: true, markers });
+  } catch (error) {
+    console.error('❌ Monaco scan error:', error.response?.data || error.message);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
