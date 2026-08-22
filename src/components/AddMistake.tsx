@@ -65,7 +65,7 @@ export const AddMistake: React.FC<AddMistakeProps> = ({ onAddMistake, onNavigate
     }
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !description || !cause || !solution || !lesson) {
       alert('Please fill out all required fields.');
@@ -74,7 +74,6 @@ export const AddMistake: React.FC<AddMistakeProps> = ({ onAddMistake, onNavigate
 
     setIsSubmitting(true);
     
-    // Parse tags (comma separated)
     const tags = tagsInput
       .split(',')
       .map(tag => tag.trim())
@@ -92,13 +91,22 @@ export const AddMistake: React.FC<AddMistakeProps> = ({ onAddMistake, onNavigate
       status: status === 'solved' ? 'solved' : 'investigating'
     };
 
-    // Simulate saving delay
-    setTimeout(() => {
+    try {
+      // Sends data to your backend on port 5000
+      await fetch('http://localhost:5000/api/ai/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mistakeTitle: title,
+          mistakeDescription: `${description} | Cause: ${cause} | Solution: ${solution}`,
+          tags: tags.length > 0 ? tags : [category, 'General'],
+        }),
+      });
+
       onAddMistake(newMistake);
       setIsSubmitting(false);
       setSuccess(true);
       
-      // Reset form
       setTitle('');
       setDescription('');
       setContext('');
@@ -111,9 +119,18 @@ export const AddMistake: React.FC<AddMistakeProps> = ({ onAddMistake, onNavigate
         setSuccess(false);
         onNavigateToTab('memories');
       }, 1500);
-    }, 800);
-  };
 
+    } catch (error) {
+      console.error('Failed to send to backend:', error);
+      onAddMistake(newMistake);
+      setIsSubmitting(false);
+      setSuccess(true);
+      setTimeout(() => {
+        setSuccess(false);
+        onNavigateToTab('memories');
+      }, 1500);
+    }
+  };
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-fadeIn pb-12">
       {/* Header */}
