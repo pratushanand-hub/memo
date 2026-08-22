@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Mistake } from '../types';
+import { ConfirmDialog } from './ConfirmDialog';
 import { 
   Search, 
   Filter, 
@@ -19,6 +20,7 @@ interface MyMemoriesProps {
   onNavigateToTab: (tabId: string) => void;
   inspectMistakeId?: string | null;
   onClearInspectMistakeId?: () => void;
+  onNotify?: (message: string, tone?: 'success' | 'error') => void;
 }
 
 export const MyMemories: React.FC<MyMemoriesProps> = ({ 
@@ -27,13 +29,15 @@ export const MyMemories: React.FC<MyMemoriesProps> = ({
   onDeleteMistake,
   onNavigateToTab,
   inspectMistakeId = null,
-  onClearInspectMistakeId
+  onClearInspectMistakeId,
+  onNotify
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedTag, setSelectedTag] = useState('All');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'alphabetical'>('newest');
   const [activeDetailId, setActiveDetailId] = useState<string | null>(inspectMistakeId);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   // Auto-open modal if navigated from another page
   React.useEffect(() => {
@@ -99,12 +103,20 @@ export const MyMemories: React.FC<MyMemoriesProps> = ({
   const handleToggleStatus = (id: string, current: 'solved' | 'investigating' | 'open') => {
     const next = current === 'solved' ? 'investigating' : 'solved';
     onUpdateStatus(id, next);
+    onNotify?.(next === 'solved' ? 'Marked as solved.' : 'Marked as investigating.', 'success');
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this memory permanently?')) {
-      onDeleteMistake(id);
+    setPendingDeleteId(id);
+  };
+
+  const confirmDelete = () => {
+    if (pendingDeleteId) {
+      const target = mistakes.find(m => m.id === pendingDeleteId);
+      onDeleteMistake(pendingDeleteId);
       setActiveDetailId(null);
+      setPendingDeleteId(null);
+      onNotify?.(`"${target?.title ?? 'Memory'}" was deleted.`, 'success');
     }
   };
 
@@ -189,12 +201,12 @@ export const MyMemories: React.FC<MyMemoriesProps> = ({
           <p className="text-gray-400 text-sm mt-1">Try refining your filters or search keywords.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredMistakes.map(mistake => (
             <div
               key={mistake.id}
               onClick={() => setActiveDetailId(mistake.id)}
-              className="glass-card glass-card-hover p-6 rounded-2xl flex flex-col justify-between cursor-pointer group relative"
+              className="glass-card glass-card-hover p-7 rounded-3xl flex flex-col justify-between cursor-pointer group relative min-h-[255px]"
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -207,7 +219,7 @@ export const MyMemories: React.FC<MyMemoriesProps> = ({
                   </span>
                 </div>
 
-                <h3 className="font-extrabold text-white text-base group-hover:text-violet-400 transition-colors">
+                <h3 className="font-extrabold text-white text-lg leading-snug group-hover:text-violet-300 transition-colors">
                   {mistake.title}
                 </h3>
                 
@@ -303,18 +315,18 @@ export const MyMemories: React.FC<MyMemoriesProps> = ({
                 <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1 text-amber-500">
                   <AlertTriangle className="w-3.5 h-3.5" /> Root Cause
                 </h4>
-                <div className="bg-gray-950/80 border border-red-500/10 rounded-xl p-4 font-mono text-xs text-rose-400 overflow-x-auto border-l-4 border-l-rose-500">
-                  <pre>{activeMistake.cause}</pre>
+                <div className="bg-gray-950/80 border border-rose-500/15 rounded-xl p-4 font-mono text-xs text-rose-300 overflow-hidden border-l-4 border-l-rose-500">
+                  <pre className="max-w-full whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{activeMistake.cause}</pre>
                 </div>
               </div>
 
               {/* Solution */}
               <div className="space-y-1.5">
-                <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1 text-emerald-500">
+                <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1 text-violet-400">
                   <CheckSquare className="w-3.5 h-3.5" /> Solution
                 </h4>
-                <div className="bg-gray-950/80 border border-emerald-500/10 rounded-xl p-4 font-mono text-xs text-emerald-400 overflow-x-auto border-l-4 border-l-emerald-500">
-                  <pre>{activeMistake.solution}</pre>
+                <div className="bg-gray-950/80 border border-violet-500/20 rounded-xl p-4 font-mono text-xs text-violet-200 overflow-hidden border-l-4 border-l-violet-500">
+                  <pre className="max-w-full whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{activeMistake.solution}</pre>
                 </div>
               </div>
 
@@ -381,6 +393,17 @@ export const MyMemories: React.FC<MyMemoriesProps> = ({
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={pendingDeleteId !== null}
+        title="Delete this memory?"
+        description="This will permanently remove the mistake, its solution, and lesson from your second brain. This can't be undone."
+        confirmLabel="Delete Memory"
+        cancelLabel="Keep it"
+        tone="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </div>
   );
 };

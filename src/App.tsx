@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
 import { MyMemories } from './components/MyMemories';
@@ -6,14 +6,27 @@ import { AddMistake } from './components/AddMistake';
 import { AskMemory } from './components/AskMemory';
 import { Insights } from './components/Insights';
 import { Settings } from './components/Settings';
+import { ToastContainer, ToastData } from './components/Toast';
+import { LandingPage } from './components/LandingPage';
 import { Mistake } from './types';
 import { getMistakes, addMistake as dbAddMistake, updateMistake as dbUpdateMistake, deleteMistake as dbDeleteMistake } from './utils/db';
 
 export const App: React.FC = () => {
+  const [route, setRoute] = useState(() => window.location.pathname === '/dashboard' ? 'dashboard' : 'landing');
   const [currentTab, setCurrentTab] = useState<string>('dashboard');
   const [mistakes, setMistakes] = useState<Mistake[]>([]);
   const [askQuery, setAskQuery] = useState<string>('');
   const [selectedMistakeId, setSelectedMistakeId] = useState<string | null>(null);
+  const [toasts, setToasts] = useState<ToastData[]>([]);
+
+  const showToast = useCallback((message: string, tone: 'success' | 'error' = 'success') => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    setToasts((prev) => [...prev, { id, message, tone }]);
+  }, []);
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
   // Load mistakes from DB on mount
   useEffect(() => {
@@ -65,6 +78,17 @@ export const App: React.FC = () => {
     setCurrentTab(tabId);
   };
 
+  const openDashboard = () => {
+    window.history.pushState({}, '', '/dashboard');
+    setRoute('dashboard');
+  };
+
+  useEffect(() => {
+    const onPopState = () => setRoute(window.location.pathname === '/dashboard' ? 'dashboard' : 'landing');
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
   // Callback to handle pre-filled "Save as New Mistake" trigger from Similarity Results
   const handleSaveAsNewFromSimilarity = (queryText: string, matchedMistakeId: string) => {
     // Navigates to Add Mistake page and we can pre-fill the form using local query context
@@ -83,13 +107,23 @@ export const App: React.FC = () => {
     setCurrentTab('add-mistake');
   };
 
+  if (route === 'landing') {
+    return <LandingPage onGetStarted={openDashboard} />;
+  }
+
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col lg:flex-row">
+    <div className="relative min-h-screen overflow-x-hidden bg-gray-950 flex flex-col lg:flex-row">
+      {/* Shared ambient background for every in-app route. Pointer events are disabled so it never blocks page controls. */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute -left-40 -top-40 h-[34rem] w-[34rem] rounded-full bg-blue-500/8 blur-3xl animate-pulse-glow" />
+        <div className="absolute right-[-12rem] top-[22%] h-[28rem] w-[28rem] rounded-full bg-sky-400/10 blur-3xl animate-pulse-glow" style={{ animationDelay: '1.5s' }} />
+        <div className="absolute bottom-[-16rem] left-[30%] h-[30rem] w-[30rem] rounded-full bg-cyan-400/8 blur-3xl animate-pulse-glow" style={{ animationDelay: '3s' }} />
+      </div>
       {/* Side Navigation Bar */}
       <Sidebar currentTab={currentTab} setCurrentTab={handleTabChange} />
 
       {/* Main Panel Content */}
-      <main className="flex-1 lg:pl-64 min-w-0">
+      <main className="app-main relative z-10 flex-1 lg:pl-64 min-w-0">
         <div className="max-w-7xl mx-auto p-4 md:p-8 pt-20 lg:pt-8 min-h-screen flex flex-col">
           {/* Active Tab Router */}
           {currentTab === 'dashboard' && (
@@ -108,6 +142,7 @@ export const App: React.FC = () => {
               onNavigateToTab={handleTabChange}
               inspectMistakeId={selectedMistakeId}
               onClearInspectMistakeId={() => setSelectedMistakeId(null)}
+              onNotify={showToast}
               key={`memories-${selectedMistakeId}`}
             />
           )}
@@ -116,6 +151,8 @@ export const App: React.FC = () => {
             <AddMistake 
               onAddMistake={handleAddMistake}
               onNavigateToTab={handleTabChange}
+              mistakes={mistakes}
+              onNotify={showToast}
             />
           )}
 
@@ -140,6 +177,8 @@ export const App: React.FC = () => {
           )}
         </div>
       </main>
+
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 };

@@ -79,7 +79,7 @@ export const getInsights = async (mistakes: Mistake[]): Promise<InsightData> => 
 
   try {
     const prompt = `
-You are Mistake-Memo AI, a software developer's second brain.
+You are Mistake Memo, a software developer's second brain.
 Analyze the following list of coding mistakes recorded by the user:
 ${JSON.stringify(
   mistakes.map(m => ({

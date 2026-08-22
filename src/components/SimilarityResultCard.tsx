@@ -26,7 +26,7 @@ export const SimilarityResultCard: React.FC<SimilarityResultCardProps> = ({
 
   // Render score color based on match strength
   const getScoreColor = (s: number) => {
-    if (s >= 85) return 'text-violet-400 border-violet-500/30 bg-violet-500/10 shadow-[0_0_15px_rgba(139,92,246,0.2)]';
+    if (s >= 85) return 'text-violet-400 border-violet-500/30 bg-violet-500/10 shadow-[0_0_15px_rgba(59,130,246,0.2)]';
     if (s >= 60) return 'text-blue-400 border-blue-500/30 bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.2)]';
     return 'text-amber-400 border-amber-500/30 bg-amber-500/10';
   };
@@ -109,9 +109,9 @@ export const SimilarityResultCard: React.FC<SimilarityResultCardProps> = ({
               <span className="w-1.5 h-1.5 bg-rose-500 rounded-full"></span>
               What caused it last time?
             </span>
-            <div className="bg-gray-950 border border-rose-500/10 rounded-2xl p-4 font-mono text-xs text-rose-400/90 overflow-x-auto min-h-[90px] border-l-4 border-l-rose-500/70 shadow-inner">
+            <div className="bg-gray-950 border border-rose-500/10 rounded-2xl p-4 font-mono text-xs text-rose-400/90 overflow-hidden min-h-[90px] border-l-4 border-l-rose-500/70 shadow-inner">
               {isCodeLike(causeComparison) ? (
-                <pre>{causeComparison}</pre>
+                <pre className="max-w-full whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{causeComparison}</pre>
               ) : (
                 <p className="whitespace-pre-wrap leading-relaxed">{causeComparison}</p>
               )}
@@ -120,13 +120,13 @@ export const SimilarityResultCard: React.FC<SimilarityResultCardProps> = ({
 
           {/* Code Solution Last Time */}
           <div className="space-y-2">
-            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+            <span className="text-[10px] font-bold text-violet-400 uppercase tracking-widest flex items-center gap-1">
+              <span className="w-1.5 h-1.5 bg-violet-500 rounded-full"></span>
               How did you solve it?
             </span>
-            <div className="bg-gray-950 border border-emerald-500/10 rounded-2xl p-4 font-mono text-xs text-emerald-400/90 overflow-x-auto min-h-[90px] border-l-4 border-l-emerald-500/70 shadow-inner">
+            <div className="bg-gray-950 border border-violet-500/15 rounded-2xl p-4 font-mono text-xs text-violet-200 overflow-hidden min-h-[90px] border-l-4 border-l-violet-500/70 shadow-inner">
               {isCodeLike(solutionComparison) ? (
-                <pre>{solutionComparison}</pre>
+                <pre className="max-w-full whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{solutionComparison}</pre>
               ) : (
                 <p className="whitespace-pre-wrap leading-relaxed">{solutionComparison}</p>
               )}
@@ -158,7 +158,7 @@ export const SimilarityResultCard: React.FC<SimilarityResultCardProps> = ({
             </button>
             <button
               onClick={() => onSaveAsNewMistake(contextComparison, matchedMistake.id)}
-              className="bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-[0_0_15px_rgba(139,92,246,0.15)]"
+              className="bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-[0_0_15px_rgba(59,130,246,0.15)]"
             >
               <Copy className="w-4 h-4" />
               Save as New Mistake
@@ -170,7 +170,7 @@ export const SimilarityResultCard: React.FC<SimilarityResultCardProps> = ({
             <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mr-1">Feedback:</span>
             <button
               onClick={() => onFeedback('helpful')}
-              className="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 text-emerald-400 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1 transition-all"
+              className="bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 hover:border-violet-500/40 text-violet-300 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1 transition-all"
             >
               <Check className="w-3.5 h-3.5" />
               Helpful

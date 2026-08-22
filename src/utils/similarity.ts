@@ -106,7 +106,7 @@ export const searchMemory = async (query: string, mistakes: Mistake[]): Promise<
 
   try {
     const prompt = `
-You are Mistake-Memo AI, a software developer's second brain.
+You are Mistake Memo, a software developer's second brain.
 The user is facing a new problem:
 "${query}"
 

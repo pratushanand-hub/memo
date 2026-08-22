@@ -35,7 +35,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, setCurrentTab }) =
             <BrainCircuit className="w-6 h-6 text-white" />
           </div>
           <span className="font-extrabold text-lg bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
-            Mistake-Memo AI
+            Mistake Memo
           </span>
         </div>
         <button 
@@ -58,7 +58,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, setCurrentTab }) =
           </div>
           <div>
             <h1 className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-gray-100 to-gray-400 bg-clip-text text-transparent">
-              Mistake-Memo AI
+              Mistake Memo
             </h1>
             <span className="text-[10px] text-violet-400 font-semibold tracking-widest uppercase">
               Second Brain
@@ -79,15 +79,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, setCurrentTab }) =
                   setIsOpen(false);
                 }}
                 className={`
-                  w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200
+                  relative w-full flex items-center gap-3.5 pl-4 pr-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200
                   ${isActive 
-                    ? 'bg-gradient-to-r from-violet-600/20 to-blue-600/10 border border-violet-500/30 text-white shadow-[0_0_15px_rgba(139,92,246,0.1)]' 
+                    ? 'bg-gradient-to-r from-violet-600/20 to-blue-600/10 border border-violet-500/30 text-white shadow-[0_0_15px_rgba(59,130,246,0.1)]' 
                     : 'text-gray-400 hover:text-gray-200 hover:bg-gray-900/50 border border-transparent'
                   }
                 `}
               >
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-gradient-to-b from-violet-400 to-blue-500 shadow-glow" />
+                )}
                 <Icon className={`w-5 h-5 ${isActive ? 'text-violet-400' : 'text-gray-400'}`} />
                 {item.name}
+                {isActive && (
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                )}
               </button>
             );
           })}
@@ -101,14 +107,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, setCurrentTab }) =
               setIsOpen(false);
             }}
             className={`
-              w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
+              relative w-full flex items-center gap-3.5 pl-4 pr-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
               ${currentTab === 'settings' 
                 ? 'bg-gradient-to-r from-violet-600/20 to-blue-600/10 border border-violet-500/30 text-white' 
                 : 'text-gray-400 hover:text-gray-200 hover:bg-gray-900/50 border border-transparent'
               }
             `}
           >
-            <Settings className="w-5 h-5 text-gray-400" />
+            {currentTab === 'settings' && (
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-gradient-to-b from-violet-400 to-blue-500 shadow-glow" />
+            )}
+            <Settings className={`w-5 h-5 ${currentTab === 'settings' ? 'text-violet-400' : 'text-gray-400'}`} />
             Settings
           </button>
           
