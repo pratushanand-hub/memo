@@ -6,6 +6,7 @@ import { AddMistake } from './components/AddMistake';
 import { AskMemory } from './components/AskMemory';
 import { Insights } from './components/Insights';
 import { Settings } from './components/Settings';
+import { AICoachModal } from './components/AICoachModal';
 import { Mistake } from './types';
 import { getMistakes, addMistake as dbAddMistake, updateMistake as dbUpdateMistake, deleteMistake as dbDeleteMistake } from './utils/db';
 
@@ -67,10 +68,8 @@ export const App: React.FC = () => {
 
   // Callback to handle pre-filled "Save as New Mistake" trigger from Similarity Results
   const handleSaveAsNewFromSimilarity = (queryText: string, matchedMistakeId: string) => {
-    // Navigates to Add Mistake page and we can pre-fill the form using local query context
     const matched = mistakes.find(m => m.id === matchedMistakeId);
     
-    // We store these parameters temporarily in localStorage or state to pre-populate AddMistake form
     localStorage.setItem('temp_prefill_query', queryText);
     if (matched) {
       localStorage.setItem('temp_prefill_matched_title', matched.title);
@@ -84,7 +83,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-gray-950 flex flex-col lg:flex-row relative">
       {/* Side Navigation Bar */}
       <Sidebar currentTab={currentTab} setCurrentTab={handleTabChange} />
 
@@ -140,7 +139,11 @@ export const App: React.FC = () => {
           )}
         </div>
       </main>
+
+      {/* Floating AI Debug Coach */}
+      <AICoachModal />
     </div>
   );
 };
+
 export default App;

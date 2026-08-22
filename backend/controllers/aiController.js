@@ -61,3 +61,60 @@ exports.analyzeMistake = async (req, res) => {
     }
   });
 };
+
+exports.askCoach = async (req, res) => {
+  const { userQuery, memoryContext } = req.body;
+
+  console.log(`\n💬 [COACH QUERY] "${userQuery}"`);
+
+  if (!userQuery) {
+    return res.status(400).json({ success: false, error: 'userQuery is required' });
+  }
+
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  if (!openRouterKey) {
+    console.error('❌ Missing OPENROUTER_API_KEY in .env');
+    return res.status(500).json({ success: false, error: 'OPENROUTER_API_KEY is not set in backend/.env' });
+  }
+
+  try {
+    const systemPrompt = `You are an expert Senior Developer and AI Debug Coach for the developer's "Mistake-Memo" app.
+Your goals:
+1. Explain the root problem clearly and why it happens under the hood.
+2. Provide clean, production-ready code examples demonstrating the fix.
+3. Offer a bulleted checklist on how to avoid repeating this mistake in future codebases.
+4. Reference relevant past mistake memories when applicable.
+
+Relevant past mistake context:
+${memoryContext ? JSON.stringify(memoryContext) : 'No past context provided.'}`;
+
+    const response = await axios.post(
+      'https://openrouter.ai/api/v1/chat/completions',
+      {
+        model: 'openrouter/auto',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userQuery }
+        ],
+        temperature: 0.3
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${openRouterKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'http://localhost:5173',
+          'X-Title': 'MistakeMemo AI Coach'
+        },
+        timeout: 30000
+      }
+    );
+
+    const reply = response.data?.choices?.[0]?.message?.content || 'Unable to generate coach advice.';
+    console.log('✅ Coach reply generated successfully');
+    return res.status(200).json({ success: true, reply });
+  } catch (error) {
+    const errorDetails = error.response?.data || error.message;
+    console.error('❌ OpenRouter Coach Error:', errorDetails);
+    return res.status(500).json({ success: false, error: errorDetails });
+  }
+};
