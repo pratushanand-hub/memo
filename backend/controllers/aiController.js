@@ -1,10 +1,20 @@
 const axios = require('axios');
 
 exports.analyzeMistake = async (req, res) => {
-  const { mistakeTitle, mistakeDescription, tags } = req.body;
+  const title = req.body.title || req.body.mistakeTitle;
+  const description = req.body.description || req.body.mistakeDescription || '';
+  const tags = req.body.tags || 'General';
+  const cause = req.body.cause || '';
+  const solution = req.body.solution || '';
+  const lesson = req.body.lesson || '';
 
-  if (!mistakeTitle) {
-    return res.status(400).json({ success: false, error: 'mistakeTitle is required' });
+  console.log(`\n📥 [NEW SUBMISSION] Title: "${title}"`);
+  console.log(`📝 Description: ${description}`);
+  console.log(`🏷️ Tags:`, tags);
+
+  if (!title) {
+    console.log('❌ Rejected: title is missing');
+    return res.status(400).json({ success: false, error: 'title is required' });
   }
 
   const memcodeKey = process.env.MEMCODE_API_KEY;
@@ -14,11 +24,12 @@ exports.analyzeMistake = async (req, res) => {
   let errorMsg = null;
 
   try {
+    console.log('⏳ Forwarding payload to Memcode API...');
     const memoryResponse = await axios.post(
       `${baseURL}/v2/memory/ingest`,
       {
-        user_query: `Mistake: ${mistakeTitle}. Details: ${mistakeDescription || ''}. Tags: ${tags || 'General'}`,
-        agent_response: 'Logged mistake to prevent repeat errors.',
+        user_query: `Mistake: ${title}. Cause: ${cause || description}. Solution: ${solution}. Lesson: ${lesson}. Tags: ${Array.isArray(tags) ? tags.join(', ') : tags}`,
+        agent_response: `Logged mistake: ${title} to prevent repeat errors.`,
         effort_level: 'low'
       },
       {
@@ -26,16 +37,17 @@ exports.analyzeMistake = async (req, res) => {
           'Authorization': `Bearer ${memcodeKey}`,
           'Content-Type': 'application/json'
         },
-        timeout: 5000
+        timeout: 8000
       }
     );
 
     if (memoryResponse.status === 200 || memoryResponse.status === 202) {
       memoryIngested = true;
+      console.log('✅ Successfully ingested into Memcode!');
     }
   } catch (memError) {
     errorMsg = memError?.response?.data || memError.message;
-    console.error('Memcode Error Detail:', JSON.stringify(errorMsg, null, 2));
+    console.error('❌ Memcode Ingestion Error:', JSON.stringify(errorMsg, null, 2));
   }
 
   return res.status(200).json({
@@ -43,9 +55,9 @@ exports.analyzeMistake = async (req, res) => {
     memoryLogged: memoryIngested,
     apiError: errorMsg,
     data: {
-      rootCause: `Root issue identified in "${mistakeTitle}": Incomplete state or parameter handling during execution.`,
-      solution: `1. Isolate the logic block where "${mistakeTitle}" was triggered.\n2. Add guard clauses and validate variable schemas before invocation.\n3. Add defensive try/catch logging to monitor recurrence.`,
-      tags: Array.isArray(tags) ? tags : [tags || 'Debugging', 'Optimization']
+      rootCause: cause || `Root issue identified in "${title}".`,
+      solution: solution || `Isolate the logic block and add schema checks.`,
+      tags: Array.isArray(tags) ? tags : [tags]
     }
   });
 };
