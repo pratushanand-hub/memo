@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { BrainCircuit, Sparkles, AlertTriangle, ArrowRight, CheckCircle2, BookmarkPlus } from 'lucide-react';
 import { Mistake, SimilarityResult } from '../types';
 import { searchMemory } from '../utils/similarity';
-import { SimilarityResultCard } from './SimilarityResultCard';
-import { BrainCircuit, ArrowRight, Sparkles, Database, Plus } from 'lucide-react';
 
 interface AskMemoryProps {
   mistakes: Mistake[];
   initialQuery?: string;
-  onViewFullMemory: (id: string) => void;
-  onSaveAsNewMistake: (query: string, matchedMistakeId: string) => void;
+  onViewFullMemory?: (id: string) => void;
+  onSaveAsNewMistake?: (query: string, matchedMistakeId: string) => void;
 }
 
 export const AskMemory: React.FC<AskMemoryProps> = ({
@@ -19,12 +18,9 @@ export const AskMemory: React.FC<AskMemoryProps> = ({
 }) => {
   const [query, setQuery] = useState(initialQuery);
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<SimilarityResult[]>([]);
-  const [searched, setSearched] = useState(false);
-  const [activeResultIdx, setActiveResultIdx] = useState(0);
-  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [result, setResult] = useState<SimilarityResult | null>(null);
 
-  // Run search if an initial query is provided from the dashboard
   useEffect(() => {
     if (initialQuery) {
       setQuery(initialQuery);
@@ -32,177 +28,195 @@ export const AskMemory: React.FC<AskMemoryProps> = ({
     }
   }, [initialQuery]);
 
-  const handleSearch = async (searchQuery: string) => {
-    if (!searchQuery.trim()) return;
+  const handleSearch = async (textToSearch?: string) => {
+    const searchText = (typeof textToSearch === 'string' ? textToSearch : query).trim();
+    if (!searchText) return;
+
     setLoading(true);
-    setSearched(true);
-    setResults([]);
-    setActiveResultIdx(0);
-    setFeedbackMessage(null);
+    setHasSearched(true);
 
     try {
-      const response = await searchMemory(searchQuery, mistakes);
-      setResults(response);
-    } catch (e) {
-      console.error(e);
+      const matchResult = await searchMemory(searchText, mistakes);
+      setResult(matchResult);
+    } catch (err) {
+      console.error('Search memory error:', err);
+      setResult(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const onFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleSearch(query);
-  };
-
-  const handleFeedback = (feedback: 'helpful' | 'not-relevant') => {
-    if (feedback === 'helpful') {
-      setFeedbackMessage('Thank you! This verification helps reinforce your developers memory.');
-    } else {
-      setFeedbackMessage('Feedback logged. We will adjust similarity weights for this context.');
-    }
-    setTimeout(() => {
-      setFeedbackMessage(null);
-    }, 3000);
-  };
-
-  const activeResult = results[activeResultIdx] || null;
-
   return (
-    <div className="space-y-8 animate-fadeIn max-w-4xl mx-auto pb-12">
-      {/* Header */}
+    <div className="space-y-6 max-w-4xl mx-auto">
       <div>
-        <h2 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <BrainCircuit className="w-8 h-8 text-violet-400" />
-          Ask Your Memory
-        </h2>
-        <p className="text-gray-400 mt-1">Have you made this mistake before? Consult your past self.</p>
+          <h2 className="text-2xl font-bold text-white tracking-tight">Ask Your Memory</h2>
+        </div>
+        <p className="text-gray-400 text-sm mt-1">
+          Have you made this mistake before? Consult your past self.
+        </p>
       </div>
 
-      {/* Query Entry Box */}
-      <form onSubmit={onFormSubmit} className="glass-card p-6 rounded-3xl border border-gray-800/80 space-y-4">
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-            Describe the problem or error message
-          </label>
-          <textarea
-            rows={3}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Describe your current struggle (e.g. My Java code crashes when I loop through an array.)"
-            className="w-full bg-gray-950/70 border border-gray-800 rounded-2xl p-4 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all"
-            required
-          />
-        </div>
+      {/* Input Box */}
+      <div className="bg-gray-900/60 border border-gray-800/80 rounded-2xl p-6 shadow-xl backdrop-blur-sm space-y-4">
+        <label className="block text-xs font-bold tracking-wider text-gray-400 uppercase">
+          Describe the problem or error message
+        </label>
+        <textarea
+          rows={3}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="e.g. Mongoose connection timed out connecting to cluster"
+          className="w-full bg-gray-950/80 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus:border-violet-500 transition-colors font-mono resize-none"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSearch();
+            }
+          }}
+        />
 
-        <div className="flex justify-between items-center">
-          <div className="text-[10px] text-gray-500 flex items-center gap-1.5">
+        <div className="flex items-center justify-between pt-2">
+          <span className="text-xs text-gray-500 flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-violet-400" />
             Supports semantic search & natural language descriptions
-          </div>
+          </span>
           <button
-            type="submit"
+            onClick={() => handleSearch()}
             disabled={loading || !query.trim()}
-            className="bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white font-bold py-2.5 px-6 rounded-xl text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-glow"
+            className="flex items-center gap-2 bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 disabled:opacity-50 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all shadow-glow cursor-pointer"
           >
-            {loading ? 'Searching...' : 'Search My Memory'}
-            <ArrowRight className="w-4 h-4" />
+            {loading ? (
+              <span>Searching...</span>
+            ) : (
+              <>
+                <span>Search My Memory</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         </div>
-      </form>
+      </div>
 
-      {/* Feedback Toast */}
-      {feedbackMessage && (
-        <div className="bg-violet-600 border border-violet-500/30 text-white rounded-2xl py-3 px-5 text-center text-xs font-semibold shadow-glow animate-scaleIn">
-          {feedbackMessage}
-        </div>
-      )}
-
-      {/* Output Screen */}
-      {loading && (
-        <div className="glass-card py-16 text-center rounded-3xl border border-violet-500/10 flex flex-col items-center justify-center space-y-4">
-          <div className="relative">
-            <div className="w-20 h-20 rounded-full bg-violet-600/10 border border-violet-500/20 flex items-center justify-center pulse-brain">
-              <BrainCircuit className="w-10 h-10 text-violet-400" />
-            </div>
-            <div className="absolute inset-0 border border-violet-500/30 rounded-full animate-ping opacity-25"></div>
-          </div>
-          <div>
-            <h4 className="text-lg font-bold text-white">🧠 Searching your past experiences...</h4>
-            <p className="text-gray-500 text-xs mt-1">Comparing syntax, categories, and tags inside local cache...</p>
-          </div>
-          <div className="w-48 h-1 bg-gray-950 rounded-full overflow-hidden relative">
-            <div className="absolute top-0 bottom-0 left-0 bg-gradient-to-r from-violet-600 to-blue-500 w-1/2 search-loader-bar rounded-full"></div>
-          </div>
-        </div>
-      )}
-
-      {!loading && searched && (
-        <div className="space-y-6">
-          {results.length === 0 ? (
-            /* No Matches Screen */
-            <div className="glass-card p-12 text-center rounded-3xl border border-gray-800/80 flex flex-col items-center justify-center animate-scaleIn">
-              <div className="w-16 h-16 rounded-full bg-gray-900 border border-gray-800 flex items-center justify-center text-gray-500 mb-4">
-                <Database className="w-8 h-8" />
-              </div>
-              <h3 className="text-2xl font-bold text-white">No Similar Memories Found</h3>
-              <p className="text-gray-400 mt-2 max-w-md text-sm">
-                This might be a brand new error context! Congratulations, you are exploring uncharted territories. Save it now to lock it in your memory database.
-              </p>
-              <button
-                onClick={() => onSaveAsNewMistake(query, '')}
-                className="mt-6 bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white font-bold py-2.5 px-6 rounded-xl text-sm flex items-center gap-2 transition-all shadow-glow"
-              >
-                <Plus className="w-4.5 h-4.5" />
-                Record as New Mistake
-              </button>
-            </div>
-          ) : (
-            /* Matches Found */
-            <div className="space-y-6">
-              {/* Primary Similarity Card */}
-              {activeResult && (
-                <SimilarityResultCard
-                  result={activeResult}
-                  onViewFullMemory={onViewFullMemory}
-                  onSaveAsNewMistake={onSaveAsNewMistake}
-                  onFeedback={handleFeedback}
-                />
-              )}
-
-              {/* Other Matches Toggle */}
-              {results.length > 1 && (
-                <div className="glass-card p-6 rounded-3xl border border-gray-800/80 space-y-4">
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                    Other Potential Memory Matches ({results.length - 1})
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {results.map((res, idx) => {
-                      if (idx === activeResultIdx) return null;
-                      return (
-                        <div
-                          key={res.matchedMistake.id}
-                          onClick={() => setActiveResultIdx(idx)}
-                          className="bg-gray-950/50 hover:bg-gray-900/60 border border-gray-900 hover:border-violet-500/20 p-4 rounded-2xl cursor-pointer flex justify-between items-center transition-all group"
-                        >
-                          <div className="flex-1 min-w-0 pr-3">
-                            <span className="text-[9px] font-bold text-violet-400 bg-violet-600/10 border border-violet-500/10 px-1.5 py-0.5 rounded">
-                              {res.matchedMistake.category}
-                            </span>
-                            <h5 className="font-bold text-white text-sm mt-1 truncate group-hover:text-violet-400 transition-colors">
-                              {res.matchedMistake.title}
-                            </h5>
-                            <p className="text-gray-500 text-[10px] truncate mt-0.5">{res.matchedMistake.description}</p>
-                          </div>
-                          <div className="text-xs font-bold text-gray-400 bg-gray-900/80 border border-gray-800/80 py-1.5 px-3 rounded-xl flex items-center gap-1">
-                            {res.score}%
-                          </div>
-                        </div>
-                      );
-                    })}
+      {/* Search Output */}
+      {hasSearched && !loading && (
+        <div>
+          {result && result.matchedMistake ? (
+            <div className="bg-gradient-to-b from-gray-900/90 to-gray-950/90 border border-violet-500/40 rounded-2xl p-6 space-y-5 shadow-2xl relative overflow-hidden">
+              {/* Header */}
+              <div className="flex items-start justify-between flex-wrap gap-4 border-b border-gray-800/80 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                    <AlertTriangle className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">
+                      You Have Made a Similar Mistake Before!
+                    </h3>
+                    <p className="text-xs text-gray-400">Identified via AI Semantic Matching</p>
                   </div>
                 </div>
+
+                <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>{result.score || 85}% Match</span>
+                </div>
+              </div>
+
+              {/* Memory Match Info */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-950/60 border border-gray-800/60 p-4 rounded-xl">
+                <div className="md:col-span-2 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-bold text-white text-base">
+                      {result.matchedMistake.title}
+                    </h4>
+                    {result.matchedMistake.category && (
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-violet-950/80 border border-violet-700/50 text-violet-300">
+                        {result.matchedMistake.category}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    {result.matchExplanation || 'Semantic match across past documented technical concepts.'}
+                  </p>
+                </div>
+                <div className="text-xs text-gray-500 space-y-1 md:border-l md:border-gray-800 md:pl-4">
+                  <p>Language/Env: <span className="text-gray-300">{result.matchedMistake.category || 'Backend'}</span></p>
+                  {result.matchedMistake.tags && result.matchedMistake.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {result.matchedMistake.tags.map((t, idx) => (
+                        <span key={idx} className="text-[10px] font-mono bg-gray-900 border border-gray-800 px-1.5 py-0.5 rounded text-gray-400">
+                          #{t}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Cause & Solution Comparison */}
+              <div className="space-y-3">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center gap-1.5 mb-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                    What Caused It Last Time?
+                  </span>
+                  <div className="p-3.5 rounded-xl bg-gray-950 border border-rose-950/40 text-rose-300 font-mono text-xs whitespace-pre-wrap">
+                    {result.matchedMistake.cause || result.matchedMistake.description || 'Underlying configuration mismatch'}
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5 mb-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    How Did You Solve It?
+                  </span>
+                  <div className="p-3.5 rounded-xl bg-gray-950 border border-emerald-950/40 text-emerald-300 font-mono text-xs whitespace-pre-wrap">
+                    {result.matchedMistake.solution || result.matchedMistake.lesson || 'Followed verified solution pattern'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Lesson Callout */}
+              {(result.matchedMistake.lesson || result.lessonLearned) && (
+                <div className="p-3.5 rounded-xl bg-violet-950/20 border border-violet-800/30 text-violet-300 text-xs italic">
+                  <span className="font-semibold not-italic text-violet-400 block mb-0.5">Lesson from your past self:</span>
+                  "{result.matchedMistake.lesson || result.lessonLearned}"
+                </div>
               )}
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-3 pt-2">
+                {onSaveAsNewMistake && (
+                  <button
+                    onClick={() => onSaveAsNewMistake(query, result.matchedMistake.id)}
+                    className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-200 border border-gray-800 px-3.5 py-2 rounded-xl hover:bg-gray-900 transition-colors"
+                  >
+                    <BookmarkPlus className="w-3.5 h-3.5" />
+                    Save as Variation
+                  </button>
+                )}
+                {onViewFullMemory && (
+                  <button
+                    onClick={() => onViewFullMemory(result.matchedMistake.id)}
+                    className="flex items-center gap-1.5 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-xl transition-all shadow-glow"
+                  >
+                    <span>Inspect Full Memory</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-12 px-4 bg-gray-900/40 border border-gray-800/60 rounded-2xl space-y-3">
+              <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center mx-auto text-gray-400">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-white">No Similar Memories Found</h3>
+              <p className="text-xs text-gray-400 max-w-md mx-auto">
+                This might be a brand new error context! Save it now to lock it in your second brain.
+              </p>
             </div>
           )}
         </div>

@@ -8,7 +8,13 @@ import { Insights } from './components/Insights';
 import { Settings } from './components/Settings';
 import { AICoachModal } from './components/AICoachModal';
 import { Mistake } from './types';
-import { getMistakes, addMistake as dbAddMistake, updateMistake as dbUpdateMistake, deleteMistake as dbDeleteMistake } from './utils/db';
+import { 
+  getMistakes, 
+  fetchMistakesFromBackend, 
+  addMistake as dbAddMistake, 
+  updateMistake as dbUpdateMistake, 
+  deleteMistake as dbDeleteMistake 
+} from './utils/db';
 
 export const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<string>('dashboard');
@@ -16,31 +22,37 @@ export const App: React.FC = () => {
   const [askQuery, setAskQuery] = useState<string>('');
   const [selectedMistakeId, setSelectedMistakeId] = useState<string | null>(null);
 
+  // Sync state from both local cache and MongoDB backend
+  const handleRefreshDb = async () => {
+    const freshData = await fetchMistakesFromBackend();
+    setMistakes(freshData);
+  };
+
   useEffect(() => {
+    // 1. Instant local render
     setMistakes(getMistakes());
+
+    // 2. Fetch fresh data from MongoDB
+    handleRefreshDb();
   }, []);
 
-  const handleRefreshDb = () => {
-    setMistakes(getMistakes());
+  const handleAddMistake = async (newMistake: Omit<Mistake, 'id' | 'createdAt'>) => {
+    await dbAddMistake(newMistake);
+    await handleRefreshDb();
   };
 
-  const handleAddMistake = (newMistake: Omit<Mistake, 'id' | 'createdAt'>) => {
-    dbAddMistake(newMistake);
-    handleRefreshDb();
-  };
-
-  const handleUpdateStatus = (id: string, nextStatus: 'solved' | 'investigating') => {
+  const handleUpdateStatus = async (id: string, nextStatus: 'solved' | 'investigating') => {
     const matched = mistakes.find(m => m.id === id);
     if (matched) {
       const updated = { ...matched, status: nextStatus };
-      dbUpdateMistake(updated);
-      handleRefreshDb();
+      await dbUpdateMistake(updated);
+      await handleRefreshDb();
     }
   };
 
-  const handleDeleteMistake = (id: string) => {
-    dbDeleteMistake(id);
-    handleRefreshDb();
+  const handleDeleteMistake = async (id: string) => {
+    await dbDeleteMistake(id);
+    await handleRefreshDb();
   };
 
   const handleNavigateWithQuery = (tabId: string, query?: string) => {

@@ -9,7 +9,23 @@ const mistakeSchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      required: true
+      default: ''
+    },
+    context: {
+      type: String,
+      default: ''
+    },
+    cause: {
+      type: String,
+      default: ''
+    },
+    solution: {
+      type: String,
+      default: ''
+    },
+    lesson: {
+      type: String,
+      default: ''
     },
     category: {
       type: String,
@@ -19,9 +35,10 @@ const mistakeSchema = new mongoose.Schema(
       type: String,
       default: 'Medium'
     },
-    lesson: {
+    status: {
       type: String,
-      default: ''
+      enum: ['solved', 'investigating', 'open'],
+      default: 'investigating'
     },
     tags: {
       type: [String],
