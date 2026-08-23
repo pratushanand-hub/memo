@@ -47,13 +47,14 @@ export const AddMistake: React.FC<AddMistakeProps> = ({ onAddMistake, onNavigate
   const [formError, setFormError] = useState<string | null>(null);
   const [dismissedSimilarity, setDismissedSimilarity] = useState(false);
 
-  // Live local similarity check as the user describes the problem.
-  // Uses the same heuristic matcher as Ask Memory, but synchronous/instant
-  // (no simulated API delay) since it runs on every keystroke.
   const liveQuery = `${title} ${description}`.trim();
   const similarMatches = useMemo(() => {
     if (liveQuery.length < 8 || mistakes.length === 0) return [];
-    return matchSimilarityLocally(liveQuery, mistakes).filter(m => m.score >= 40);
+    const result = matchSimilarityLocally(liveQuery, mistakes) as any;
+    if (!result) return [];
+    return Array.isArray(result) 
+      ? result.filter((m: any) => m && m.score >= 40) 
+      : (result.score >= 40 ? [result] : []);
   }, [liveQuery, mistakes]);
 
   useEffect(() => {
@@ -91,7 +92,7 @@ export const AddMistake: React.FC<AddMistakeProps> = ({ onAddMistake, onNavigate
     }
   }, []);
 
-const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const missing = REQUIRED_FIELDS.filter(f => {
@@ -127,8 +128,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     };
 
     try {
-      // Sends data to your backend on port 5000
-      await fetch('http://[https://mistake-memo-backend.onrender.com](https://mistake-memo-backend.onrender.com)/api/ai/analyze', {
+      await fetch('https://mistake-memo-backend.onrender.com/api/ai/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -166,6 +166,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       }, 1500);
     }
   };
+
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-fadeIn pb-12">
       {/* Header */}
@@ -280,17 +281,17 @@ const handleSubmit = async (e: React.FormEvent) => {
                   </p>
 
                   <div className="mt-3 space-y-2">
-                    {similarMatches.map((match) => (
+                    {similarMatches.map((match: any) => (
                       <div
-                        key={match.matchedMistake.id}
+                        key={match?.matchedMistake?.id || Math.random()}
                         className="flex items-center justify-between gap-3 bg-gray-950/60 border border-gray-800/80 rounded-xl px-3.5 py-2.5"
                       >
                         <div className="min-w-0">
-                          <p className="text-xs font-semibold text-gray-200 truncate">{match.matchedMistake.title}</p>
-                          <p className="text-[10px] text-gray-500 truncate mt-0.5">{match.matchedMistake.solution}</p>
+                          <p className="text-xs font-semibold text-gray-200 truncate">{match?.matchedMistake?.title}</p>
+                          <p className="text-[10px] text-gray-500 truncate mt-0.5">{match?.matchedMistake?.solution}</p>
                         </div>
                         <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full shrink-0">
-                          {match.score}% match
+                          {match?.score}% match
                         </span>
                       </div>
                     ))}

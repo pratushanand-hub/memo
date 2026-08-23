@@ -45,7 +45,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
       const endpoint = isSignUp ? '/api/auth/register' : '/api/auth/login';
       const bodyPayload = isSignUp ? { name, email, password } : { email, password };
 
-      const response = await fetch(`http://[https://mistake-memo-backend.onrender.com](https://mistake-memo-backend.onrender.com)${endpoint}`, {
+     const response = await fetch(`https://mistake-memo-backend.onrender.com${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(bodyPayload)
@@ -85,7 +85,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
 
     try {
       // Register or login the google user directly in the database
-      const response = await fetch('http://[https://mistake-memo-backend.onrender.com](https://mistake-memo-backend.onrender.com)/api/auth/register', {
+      const response = await fetch('https://mistake-memo-backend.onrender.com/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -99,7 +99,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
 
       // If already registered, login instead
       if (!response.ok && data.error && data.error.includes('already exists')) {
-        const loginRes = await fetch('http://[https://mistake-memo-backend.onrender.com](https://mistake-memo-backend.onrender.com)/api/auth/login', {
+        const loginRes = await fetch('https://mistake-memo-backend.onrender.com/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: googleEmail, password: googlePassword })
