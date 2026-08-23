@@ -6,6 +6,7 @@ import { AddMistake } from './components/AddMistake';
 import { AskMemory } from './components/AskMemory';
 import { Insights } from './components/Insights';
 import { Settings } from './components/Settings';
+import { LandingPage } from './components/LandingPage';
 import { AICoachModal } from './components/AICoachModal';
 import { Mistake } from './types';
 import { 
@@ -22,17 +23,13 @@ export const App: React.FC = () => {
   const [askQuery, setAskQuery] = useState<string>('');
   const [selectedMistakeId, setSelectedMistakeId] = useState<string | null>(null);
 
-  // Sync state from both local cache and MongoDB backend
   const handleRefreshDb = async () => {
     const freshData = await fetchMistakesFromBackend();
     setMistakes(freshData);
   };
 
   useEffect(() => {
-    // 1. Instant local render
     setMistakes(getMistakes());
-
-    // 2. Fetch fresh data from MongoDB
     handleRefreshDb();
   }, []);
 
@@ -95,6 +92,10 @@ export const App: React.FC = () => {
 
       <main className="flex-1 lg:pl-64 min-w-0">
         <div className="max-w-7xl mx-auto p-4 md:p-8 pt-20 lg:pt-8 min-h-screen flex flex-col">
+          {currentTab === 'landing' && (
+            <LandingPage onGetStarted={() => setCurrentTab('dashboard')} />
+          )}
+
           {currentTab === 'dashboard' && (
             <Dashboard 
               mistakes={mistakes} 
@@ -145,6 +146,7 @@ export const App: React.FC = () => {
       </main>
 
       <AICoachModal />
+
     </div>
   );
 };

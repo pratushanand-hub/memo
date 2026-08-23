@@ -56,7 +56,7 @@ export const Settings: React.FC<SettingsProps> = ({ onResetDb }) => {
 
         <div className="mt-5 space-y-4">
           <p className="text-xs text-gray-400 leading-relaxed">
-            Mistake-Memo AI is pre-configured with high-fidelity local keyword and tag matching. To experience true AI-powered explanations, semantic summaries, and custom coding lessons, configure a **Gemini API Key** from Google AI Studio.
+            Mistake Memo is pre-configured with high-fidelity local keyword and tag matching. To experience true AI-powered explanations, semantic summaries, and custom coding lessons, configure a **Gemini API Key** from Google AI Studio.
           </p>
 
           <form onSubmit={handleSaveKey} className="space-y-4 pt-2">
@@ -142,7 +142,7 @@ export const Settings: React.FC<SettingsProps> = ({ onResetDb }) => {
 
       {/* Footer Info */}
       <div className="text-center text-[10px] text-gray-600 mt-8">
-        <p>Mistake-Memo AI &copy; 2026. Built with React, TypeScript, and Google Gemini API.</p>
+        <p>Mistake Memo &copy; 2026. Built with React, TypeScript, and Google Gemini API.</p>
         <p className="mt-1">All data stays locally in your browser storage.</p>
       </div>
     </div>

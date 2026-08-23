@@ -24,7 +24,6 @@ export const matchSimilarityLocally = (
   let matchedTerms: string[] = [];
 
   for (const m of mistakes) {
-    // Safely combine all possible schema fields
     const mistakeText = [
       m.title || '',
       m.description || '',
@@ -47,7 +46,6 @@ export const matchSimilarityLocally = (
       }
     });
 
-    // Tag boosts
     if (Array.isArray(m.tags)) {
       m.tags.forEach((tag) => {
         const cleanTag = tag.toLowerCase().trim();
@@ -57,7 +55,6 @@ export const matchSimilarityLocally = (
       });
     }
 
-    // Title boost
     if (m.title && query.toLowerCase().includes(m.title.toLowerCase())) {
       overlapping.push('title-match');
     }

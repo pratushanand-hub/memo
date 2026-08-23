@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Mistake } from '../types';
-import { Plus, Check, ArrowLeft, Tag as TagIcon, Sparkles } from 'lucide-react';
+import { matchSimilarityLocally } from '../utils/similarity';
+import { Plus, Check, ArrowLeft, Tag as TagIcon, Sparkles, AlertTriangle, History, ArrowRight } from 'lucide-react';
 
 interface AddMistakeProps {
   onAddMistake: (mistake: Omit<Mistake, 'id' | 'createdAt'>) => void;
   onNavigateToTab: (tabId: string) => void;
+  mistakes?: Mistake[];
+  onNotify?: (message: string, tone?: 'success' | 'error') => void;
 }
 
 const CATEGORIES = [
@@ -21,7 +24,15 @@ const CATEGORIES = [
   'Other'
 ];
 
-export const AddMistake: React.FC<AddMistakeProps> = ({ onAddMistake, onNavigateToTab }) => {
+const REQUIRED_FIELDS: { key: 'title' | 'description' | 'cause' | 'solution' | 'lesson'; label: string }[] = [
+  { key: 'title', label: 'Problem / Mistake Title' },
+  { key: 'description', label: 'Short Description' },
+  { key: 'cause', label: 'Root Cause' },
+  { key: 'solution', label: 'Solution' },
+  { key: 'lesson', label: 'Lesson Learned' },
+];
+
+export const AddMistake: React.FC<AddMistakeProps> = ({ onAddMistake, onNavigateToTab, mistakes = [], onNotify }) => {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Programming');
   const [description, setDescription] = useState('');
@@ -33,6 +44,21 @@ export const AddMistake: React.FC<AddMistakeProps> = ({ onAddMistake, onNavigate
   const [status, setStatus] = useState<'solved' | 'investigating'>('solved');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [dismissedSimilarity, setDismissedSimilarity] = useState(false);
+
+  // Live local similarity check as the user describes the problem.
+  // Uses the same heuristic matcher as Ask Memory, but synchronous/instant
+  // (no simulated API delay) since it runs on every keystroke.
+  const liveQuery = `${title} ${description}`.trim();
+  const similarMatches = useMemo(() => {
+    if (liveQuery.length < 8 || mistakes.length === 0) return [];
+    return matchSimilarityLocally(liveQuery, mistakes).filter(m => m.score >= 40);
+  }, [liveQuery, mistakes]);
+
+  useEffect(() => {
+    setDismissedSimilarity(false);
+  }, [title]);
 
   // Auto-prefill details if redirected from similarity search results
   useEffect(() => {
@@ -67,11 +93,20 @@ export const AddMistake: React.FC<AddMistakeProps> = ({ onAddMistake, onNavigate
 
 const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !description || !cause || !solution || !lesson) {
-      alert('Please fill out all required fields.');
+
+    const missing = REQUIRED_FIELDS.filter(f => {
+      const value = { title, description, cause, solution, lesson }[f.key];
+      return !value.trim();
+    });
+
+    if (missing.length > 0) {
+      const message = `Missing required field${missing.length > 1 ? 's' : ''}: ${missing.map(f => f.label).join(', ')}.`;
+      setFormError(message);
+      onNotify?.(message, 'error');
       return;
     }
 
+    setFormError(null);
     setIsSubmitting(true);
     
     const tags = tagsInput
@@ -150,8 +185,8 @@ const handleSubmit = async (e: React.FormEvent) => {
       </div>
 
       {success ? (
-        <div className="glass-card border-emerald-500/20 p-12 text-center rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.05)] flex flex-col items-center justify-center animate-scaleIn">
-          <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-4 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+        <div className="glass-card border-violet-500/25 p-12 text-center rounded-3xl shadow-glow flex flex-col items-center justify-center animate-scaleIn">
+          <div className="w-16 h-16 rounded-full bg-violet-500/10 border border-violet-500/30 flex items-center justify-center text-violet-300 mb-4 shadow-glow">
             <Check className="w-8 h-8" />
           </div>
           <h3 className="text-2xl font-bold text-white">Memory Locked In!</h3>
@@ -164,6 +199,13 @@ const handleSubmit = async (e: React.FormEvent) => {
             <Sparkles className="w-5 h-5 text-violet-400" />
             <h3 className="font-bold text-white text-lg">Mistake Memo Specifications</h3>
           </div>
+
+          {formError && (
+            <div className="flex items-start gap-3 bg-rose-500/10 border border-rose-500/30 rounded-xl px-4 py-3 animate-fadeIn">
+              <AlertTriangle className="w-4 h-4 text-rose-400 mt-0.5 shrink-0" />
+              <p className="text-xs text-rose-300 leading-relaxed">{formError}</p>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Title */}
@@ -214,6 +256,58 @@ const handleSubmit = async (e: React.FormEvent) => {
               className="w-full bg-gray-950/70 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-violet-500 transition-all"
             />
           </div>
+
+          {/* Live Similarity Detection */}
+          {similarMatches.length > 0 && !dismissedSimilarity && (
+            <div className="bg-gradient-to-r from-amber-500/10 to-violet-600/5 border border-amber-500/30 rounded-2xl p-5 animate-fadeIn relative">
+              <button
+                type="button"
+                onClick={() => setDismissedSimilarity(true)}
+                className="absolute top-3 right-3 text-gray-500 hover:text-white transition-colors text-xs"
+              >
+                Dismiss
+              </button>
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 shrink-0">
+                  <History className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-amber-300">
+                    {similarMatches.length === 1 ? 'This looks familiar' : `${similarMatches.length} similar memories found`}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    You may have already solved something like this before saving a new one.
+                  </p>
+
+                  <div className="mt-3 space-y-2">
+                    {similarMatches.map((match) => (
+                      <div
+                        key={match.matchedMistake.id}
+                        className="flex items-center justify-between gap-3 bg-gray-950/60 border border-gray-800/80 rounded-xl px-3.5 py-2.5"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-gray-200 truncate">{match.matchedMistake.title}</p>
+                          <p className="text-[10px] text-gray-500 truncate mt-0.5">{match.matchedMistake.solution}</p>
+                        </div>
+                        <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full shrink-0">
+                          {match.score}% match
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => onNavigateToTab('ask-memory')}
+                    className="mt-3 text-xs font-semibold text-violet-400 hover:text-violet-300 flex items-center gap-1 transition-all"
+                  >
+                    Ask Memory instead
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Context */}
           <div className="space-y-2">
@@ -295,7 +389,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 Current Status
               </label>
               <div className="flex gap-4">
-                <label className="flex-1 flex items-center justify-center gap-2 border border-gray-800 rounded-xl py-3 px-4 text-sm text-gray-400 hover:text-white cursor-pointer transition-all bg-gray-950/20 has-[:checked]:bg-emerald-500/10 has-[:checked]:border-emerald-500/30 has-[:checked]:text-emerald-400">
+                <label className="flex-1 flex items-center justify-center gap-2 border border-gray-800 rounded-xl py-3 px-4 text-sm text-gray-400 hover:text-white cursor-pointer transition-all bg-gray-950/20 has-[:checked]:bg-violet-500/10 has-[:checked]:border-violet-500/30 has-[:checked]:text-violet-300">
                   <input
                     type="radio"
                     name="status"

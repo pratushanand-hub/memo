@@ -16,6 +16,7 @@ interface InsightsProps {
 }
 
 export const Insights: React.FC<InsightsProps> = ({ mistakes }) => {
+  const categoryColors = ['#0A1128', '#CBD5E1', '#1F2937', '#0F766E', '#1E3A8A', '#164E63'];
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<InsightData | null>(null);
 
@@ -63,7 +64,7 @@ export const Insights: React.FC<InsightsProps> = ({ mistakes }) => {
           <BarChart2 className="w-12 h-12 text-gray-600 mb-3" />
           <h3 className="text-white font-bold text-lg">No Analytics Available Yet</h3>
           <p className="text-gray-400 text-sm mt-1 max-w-sm">
-            Save at least one mistake in your database to let Mistake-Memo AI run pattern matching on your workflow.
+            Save at least one mistake in your database to let Mistake Memo run pattern matching on your workflow.
           </p>
         </div>
       </div>
@@ -125,11 +126,11 @@ export const Insights: React.FC<InsightsProps> = ({ mistakes }) => {
 
         {/* Metric 3: Improvement Trend */}
         <div className="glass-card p-6 rounded-2xl relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-600/5 rounded-full blur-2xl"></div>
+          <div className="absolute top-0 right-0 w-24 h-24 bg-violet-600/10 rounded-full blur-2xl"></div>
           <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Solved Metric
+            <CheckCircle2 className="w-3.5 h-3.5 text-violet-400" /> Solved Metric
           </span>
-          <h3 className="text-2xl font-extrabold text-emerald-400 mt-2 flex items-baseline gap-1">
+          <h3 className="text-2xl font-extrabold text-violet-300 mt-2 flex items-baseline gap-1">
             {Math.round((data.solvedCount / data.totalCount) * 100)}%
             <span className="text-xs text-gray-400 font-normal">Solved</span>
           </h3>
@@ -158,7 +159,7 @@ export const Insights: React.FC<InsightsProps> = ({ mistakes }) => {
           </div>
 
           <div className="mt-6 pt-4 border-t border-gray-900 flex items-center justify-between text-xs text-gray-500">
-            <span>Powered by Mistake-Memo Heuristics</span>
+            <span>Powered by Mistake Memo Heuristics</span>
             <span className="flex items-center gap-1 text-violet-400 font-semibold cursor-pointer hover:underline">
               Analyze tags details <ArrowUpRight className="w-3.5 h-3.5" />
             </span>
@@ -184,8 +185,8 @@ export const Insights: React.FC<InsightsProps> = ({ mistakes }) => {
                     {/* Visual Bar */}
                     <div className="h-2 w-full bg-gray-950 rounded-full overflow-hidden">
                       <div 
-                        style={{ width: `${widthPercent}%` }} 
-                        className="h-full bg-gradient-to-r from-violet-600 to-blue-500 rounded-full"
+                        style={{ width: `${widthPercent}%`, backgroundColor: categoryColors[i % categoryColors.length] }} 
+                        className="h-full rounded-full"
                       />
                     </div>
                     {/* Solved Ratio */}

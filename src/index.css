@@ -6,23 +6,39 @@
   body {
     @apply bg-gray-950 text-gray-100 antialiased;
     background-image: 
-      radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.08) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.08) 0px, transparent 50%);
+      radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.2) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(14, 165, 233, 0.14) 0px, transparent 50%);
     background-attachment: fixed;
   }
 }
 
 @layer utilities {
   .glass-card {
-    @apply bg-gray-900/60 backdrop-blur-xl border border-gray-800/80;
+    @apply bg-gray-900/70 backdrop-blur-xl border border-violet-400/10 shadow-[0_16px_40px_rgba(0,0,0,0.24)];
   }
   
   .glass-card-hover {
-    @apply transition-all duration-300 hover:bg-gray-900/80 hover:border-violet-500/30 hover:shadow-[0_0_25px_rgba(139,92,246,0.1)];
+    @apply transition-all duration-300 hover:-translate-y-0.5 hover:bg-gray-900/90 hover:border-violet-400/45 hover:shadow-[0_0_28px_rgba(59,130,246,0.18)];
   }
 
   .glow-border {
-    border-image: linear-gradient(to right, #8b5cf6, #3b82f6) 1;
+    border-image: linear-gradient(to right, #3b82f6, #0ea5e9) 1;
+  }
+
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .perspective-1200 {
+    perspective: 1200px;
+  }
+
+  .backface-hidden {
+    backface-visibility: hidden;
   }
   
   /* Custom scrollbars */
@@ -42,13 +58,13 @@
 @keyframes pulse-glow {
   0%, 100% {
     transform: scale(1);
-    opacity: 0.9;
-    filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.5));
+    opacity: 0.85;
+    filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.5));
   }
   50% {
     transform: scale(1.05);
     opacity: 1;
-    filter: drop-shadow(0 0 30px rgba(139, 92, 246, 0.8));
+    filter: drop-shadow(0 0 30px rgba(59, 130, 246, 0.8));
   }
 }
 
@@ -64,4 +80,109 @@
 
 .search-loader-bar {
   animation: search-bar 1.5s infinite linear;
+}
+
+/* Light workspace: scoped to the page area so the dark navigation remains intentionally unchanged. */
+.app-main {
+  min-height: 100vh;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.app-main .glass-card {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: #e2e8f0;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
+
+.app-main [class*="bg-gray-950"] { background-color: #ffffff !important; }
+.app-main [class*="bg-gray-900"] { background-color: #ffffff !important; }
+.app-main [class*="bg-gray-800"] { background-color: #f1f5f9 !important; }
+.app-main [class*="border-gray-"] { border-color: #e2e8f0 !important; }
+.app-main [class*="text-white"],
+.app-main [class*="text-gray-100"],
+.app-main [class*="text-gray-200"] { color: #0f172a !important; }
+.app-main [class*="text-gray-300"] { color: #334155 !important; }
+.app-main [class*="text-gray-400"],
+.app-main [class*="text-gray-500"] { color: #64748b !important; }
+.app-main input,
+.app-main textarea,
+.app-main select { background-color: #ffffff !important; color: #0f172a !important; }
+
+/* Preserve the intended high-contrast treatment of primary actions within the light workspace. */
+.app-main button[class*="bg-gradient"],
+.landing-page button[class*="bg-gradient"] {
+  color: #ffffff !important;
+  background-image: linear-gradient(135deg, #1e3a8a, #2563eb) !important;
+  box-shadow: 0 10px 24px rgba(30, 58, 138, 0.24);
+}
+.app-main [class*="bg-violet-500/10"],
+.app-main [class*="bg-violet-600/10"],
+.app-main [class*="bg-violet-600/15"] {
+  background-color: rgba(37, 99, 235, 0.12) !important;
+  border-color: rgba(37, 99, 235, 0.36) !important;
+}
+.app-main [class*="text-violet-400"],
+.app-main [class*="text-violet-300"] { color: #1d4ed8 !important; }
+
+.landing-page .glass-card {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: #e2e8f0;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
+.landing-page [class*="text-white"],
+.landing-page [class*="text-gray-100"],
+.landing-page [class*="text-gray-200"] { color: #0f172a !important; }
+.landing-page [class*="text-gray-300"] { color: #334155 !important; }
+.landing-page [class*="text-gray-400"],
+.landing-page [class*="text-gray-500"] { color: #64748b !important; }
+.landing-page [class*="border-violet-300/10"] { border-color: #e2e8f0 !important; }
+.landing-page .landing-secondary-cta { color: #1e3a8a !important; }
+.landing-page .landing-eyebrow {
+  color: #eff6ff !important;
+  background: linear-gradient(135deg, #0a2259, #2563eb) !important;
+  border: 1px solid #1d4ed8;
+  box-shadow: 0 8px 20px rgba(30, 64, 175, 0.24);
+}
+
+.landing-dark-nav,
+.landing-hero,
+.landing-footer {
+  width: 100vw;
+  margin-left: calc(50% - 50vw) !important;
+  margin-right: calc(50% - 50vw) !important;
+  background: #05070d;
+}
+.landing-dark-nav {
+  border-color: rgba(96, 165, 250, 0.2);
+}
+.landing-dark-nav [class*="text-white"],
+.landing-dark-nav [class*="text-gray"],
+.landing-dark-nav a { color: #e2e8f0 !important; }
+.landing-dark-nav a:hover { color: #93c5fd !important; }
+.landing-hero {
+  color: #f8fafc;
+  background-image: radial-gradient(circle at 70% 40%, rgba(37, 99, 235, 0.28), transparent 34%), radial-gradient(circle at 20% 0%, rgba(14, 165, 233, 0.14), transparent 28%);
+}
+.landing-hero [class*="text-white"],
+.landing-hero h1 { color: #f8fafc !important; }
+.landing-hero [class*="text-gray-400"],
+.landing-hero [class*="text-gray-500"] { color: #cbd5e1 !important; }
+.landing-hero .landing-secondary-cta {
+  color: #eff6ff !important;
+  background: transparent !important;
+  border-color: #93c5fd !important;
+}
+.landing-hero .landing-secondary-cta:hover { background: rgba(59, 130, 246, 0.16) !important; }
+.landing-hero .landing-eyebrow { background: linear-gradient(135deg, #0b2a6f, #2563eb) !important; }
+.landing-hero [class*="bg-violet-600/30"] { background-color: rgba(37, 99, 235, 0.46) !important; }
+.landing-hero [class*="bg-indigo-500/15"] { background-color: rgba(14, 165, 233, 0.28) !important; }
+.landing-footer { color: #94a3b8; }
+.landing-footer [class*="font-semibold"] { color: #f8fafc !important; }
+.landing-footer a { color: #cbd5e1; }
+.landing-footer a:hover { color: #93c5fd; }
+.landing-page [class*="bg-violet-500/10"],
+.landing-page [class*="bg-violet-600/15"] {
+  background-color: rgba(37, 99, 235, 0.12) !important;
+  border-color: rgba(37, 99, 235, 0.35) !important;
 }
