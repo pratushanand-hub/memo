@@ -27,7 +27,7 @@ export const AICoachModal: React.FC = () => {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/ai/coach', {
+      const res = await fetch('http://[https://mistake-memo-backend.onrender.com](https://mistake-memo-backend.onrender.com)/api/ai/coach', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userQuery: userMsg })

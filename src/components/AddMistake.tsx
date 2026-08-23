@@ -128,7 +128,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     try {
       // Sends data to your backend on port 5000
-      await fetch('http://localhost:5000/api/ai/analyze', {
+      await fetch('http://[https://mistake-memo-backend.onrender.com](https://mistake-memo-backend.onrender.com)/api/ai/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

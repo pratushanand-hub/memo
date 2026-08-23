@@ -1,6 +1,6 @@
 import { Mistake } from '../types';
 
-const API_BASE = 'http://localhost:5000/api/mistakes';
+const API_BASE = 'http://[https://mistake-memo-backend.onrender.com](https://mistake-memo-backend.onrender.com)/api/mistakes';
 const GEMINI_API_KEY_STORAGE = 'mistake_memo_gemini_key';
 
 let memoryCache: Mistake[] = [];
