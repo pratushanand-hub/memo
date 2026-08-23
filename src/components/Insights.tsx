@@ -7,7 +7,6 @@ import {
   CheckCircle2, 
   Tag, 
   BarChart3, 
-  TrendingUp, 
   RefreshCw,
   X,
   Layers
