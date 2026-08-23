@@ -19,6 +19,7 @@ mongoose
   .catch((err) => console.error('❌ MongoDB Connection Error:', err.message));
 
 // Route Mounts
+app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/ai', require('./routes/aiRoutes'));
 
 try {

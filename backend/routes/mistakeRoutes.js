@@ -4,18 +4,35 @@ const router = express.Router();
 
 const Mistake = require('../models/Mistake');
 
-
-// CREATE a mistake
+// 1. CREATE a mistake (Scoped to userEmail)
 router.post('/', async (req, res) => {
   try {
-    const mistake = await Mistake.create(req.body);
+    const { userEmail, title } = req.body;
+
+    if (!userEmail) {
+      return res.status(400).json({
+        success: false,
+        error: 'User email is required to record a mistake'
+      });
+    }
+
+    if (!title) {
+      return res.status(400).json({
+        success: false,
+        error: 'Title is required'
+      });
+    }
+
+    const mistake = await Mistake.create({
+      ...req.body,
+      userEmail: userEmail.toLowerCase()
+    });
 
     res.status(201).json({
       success: true,
       message: 'Mistake saved successfully',
       data: mistake
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -24,11 +41,22 @@ router.post('/', async (req, res) => {
   }
 });
 
-
-// GET all mistakes
+// 2. GET all mistakes (Scoped by ?userEmail=...)
 router.get('/', async (req, res) => {
   try {
-    const mistakes = await Mistake.find().sort({
+    const { userEmail } = req.query;
+
+    if (!userEmail) {
+      // If no user email provided, return empty list
+      return res.status(200).json({
+        success: true,
+        data: []
+      });
+    }
+
+    const mistakes = await Mistake.find({ 
+      userEmail: userEmail.toLowerCase() 
+    }).sort({
       createdAt: -1
     });
 
@@ -36,7 +64,6 @@ router.get('/', async (req, res) => {
       success: true,
       data: mistakes
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -45,8 +72,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-
-// GET one mistake
+// 3. GET one mistake
 router.get('/:id', async (req, res) => {
   try {
     const mistake = await Mistake.findById(req.params.id);
@@ -62,7 +88,6 @@ router.get('/:id', async (req, res) => {
       success: true,
       data: mistake
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -71,8 +96,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-
-// UPDATE a mistake
+// 4. UPDATE a mistake
 router.put('/:id', async (req, res) => {
   try {
     const mistake = await Mistake.findByIdAndUpdate(
@@ -88,7 +112,6 @@ router.put('/:id', async (req, res) => {
       success: true,
       data: mistake
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -97,8 +120,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-
-// DELETE a mistake
+// 5. DELETE a mistake
 router.delete('/:id', async (req, res) => {
   try {
     await Mistake.findByIdAndDelete(req.params.id);
@@ -107,7 +129,6 @@ router.delete('/:id', async (req, res) => {
       success: true,
       message: 'Mistake deleted successfully'
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -115,6 +136,5 @@ router.delete('/:id', async (req, res) => {
     });
   }
 });
-
 
 module.exports = router;

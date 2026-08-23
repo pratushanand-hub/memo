@@ -2,6 +2,13 @@ const mongoose = require('mongoose');
 
 const mistakeSchema = new mongoose.Schema(
   {
+    userEmail: {
+      type: String,
+      required: true,
+      lowercase: true,
+      trim: true,
+      index: true
+    },
     title: {
       type: String,
       required: true,
@@ -50,6 +57,6 @@ const mistakeSchema = new mongoose.Schema(
   }
 );
 
-const Mistake = mongoose.model('Mistake', mistakeSchema);
+const Mistake = mongoose.models.Mistake || mongoose.model('Mistake', mistakeSchema);
 
 module.exports = Mistake;
