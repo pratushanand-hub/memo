@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 // User Model Definition
 const userSchema = new mongoose.Schema({
@@ -36,12 +37,16 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'An account with this email already exists. Please log in.' });
     }
 
+    // Hash the password before saving
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`;
 
     const newUser = new User({
       name,
       email: email.toLowerCase(),
-      password,
+      password: hashedPassword,
       avatarUrl
     });
 
@@ -76,7 +81,9 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'No account found with this email. Please create an account.' });
     }
 
-    if (user.password !== password) {
+    // Compare entered password with stored hashed password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
       return res.status(401).json({ error: 'Invalid password. Please check your credentials.' });
     }
 
